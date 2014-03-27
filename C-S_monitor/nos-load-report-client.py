@@ -32,11 +32,11 @@ diskHeadTitle = "DISK"
 netHeadTitle = "NET"
 socketHeadTitle = "SOCKET"
 
-cpuStatItemsName = ["user" , "sys" , "idel" , "iowait" , "ctxt" , "running" , "blocked"]
+cpuStatItemsName = ["user" , "sys" , "idel" , "iowait" , "ctxt" , "run" , "block"]
 memoryStatItemsName = ["total" , "free" , "cache" , "buffer" , "swap"]
 diskStatItemsName = ["name" , "rIO" , "wIO" , "rMerge" , "wMerge" , "wait" , "util" , "rRate" , "wRate"]
 netStatItemsName = ["name" , "rPackage" , "wPackage" , "rKB" , "wKB"] 
-socketStatItemsName = ["sockets" , "tcps" , "udps" , "raws" , "IPFlag" , "TWAIT"]
+socketStatItemsName = ["socks" , "tcps" , "udps" , "raws" , "IPFlag" , "TWAIT"]
 
 g_logFile = None
 
@@ -239,6 +239,7 @@ def getStatString(name , stat) :
 def getLoadStatistics(interval , diskNames , netNames) : 
 	statDict = {}
 	netStats , socketStat = getNetState(interval , netNames)
+	print netStats
 	if not netStats : 
 		print "Get net statistics failed !"
 		return None

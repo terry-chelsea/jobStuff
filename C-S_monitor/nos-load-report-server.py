@@ -30,7 +30,7 @@ g_screen = curses.initscr()
 
 gLogFiles = {}
 	
-def toString(input) : 
+def 
 	string = ""
 	items = input.split("-")
 	for item in items : 
