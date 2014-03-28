@@ -53,7 +53,7 @@ itemLengthDict = {
 #每个IP的主机名、需要显示磁盘名、网卡名和该IP的行号，前面三项由使用者配置，后面一项系统设置
 #格式: IP:[name , [sda_names] , [netcards] , line]
 IPToNameDict = {"127.0.0.1" : ["localHost" , ["sda"] , ["eth1"] , 0]}
-linesPerHost = 2
+linesPerHost = 4
 maxHostNameLength = 0
 hostNameStartPos = 2
 
@@ -361,8 +361,12 @@ def initShowHostNames() :
 		infos = IPToNameDict[ip]
 		ipString = "%s%s|" %(ip , " " * (maxHostNameLength - 1 - len(ip))) 
 		nameString = "%s%s|" %(infos[0] , " " * (maxHostNameLength - 1 - len(infos[0])))
+		emptyString = "%s|" %(" " * (maxHostNameLength - 1))
 		g_screen.addstr(infos[3] , hostNameStartPos , ipString)
-		g_screen.addstr(infos[3] + 1 , hostNameStartPos , nameString)
+		if linesPerHost > 1 : 
+			g_screen.addstr(infos[3] + 1 , hostNameStartPos , nameString)
+			for i in range(0 , linesPerHost - 2) : 
+				g_screen.addstr(infos[3] + 2 + i , hostNameStartPos , emptyString)
 	
 	g_screen.refresh()
 
