@@ -21,7 +21,7 @@ import curses
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 
 g_logFile = file("temp_log" , "w")
-g_serverIpAddr = '0.0.0.0'
+g_serverIpAddr = '127.0.0.1'
 g_port = 5737
 g_delimiter = " : "
 #机器名与显示短名称的映射字典，短名称用于显示，防止占用太多的屏幕空间
@@ -36,6 +36,7 @@ g_machineDict = {
     'noscoder8.server.163.org' : 'nc8',
     'noscoder9.server.163.org' : 'nc9',
     'noscoder10.server.163.org' : 'nc10',
+	'fengyu-VirtualBox' : 'fy'
     }
 
 #显示指标值的字典, key为"机器短名称,指标名"，value为[x, y, title的长度，value的长度]
@@ -45,7 +46,8 @@ g_requestQueue = Queue.Queue(maxsize = 10000)
 g_screen = None
 
 g_statNames = ['cpuUtils' , 'diskUtils' , 'diskReadRate' , 'diskWriteRate' , 
-				'netRecvBytes' , 'netSendBytes' , 'netRecvPacks' , 'netSendPacks']
+				'netRecvBytes' , 'netSendBytes' , 'netRecvPacks' , 'netSendPacks' , 
+				'established' , 'TIME_WAIT']
 
 def deployShowFrame() : 
     global g_keyPosDict
@@ -128,7 +130,8 @@ def showStats(statDict):
                 if len(unitValue) > pos[3]:
                     unitValue = '*'*pos[3]
                 showValueText  = unitValue.ljust(pos[3])
-                g_screen.addstr(pos[0], pos[1], "%s%s%s" % (showKeyText, g_delimiter , showValueText))
+                g_screen.addstr(pos[0], pos[1], "%s%s%s" % (showKeyText, g_delimiter , showValueText) , curses.color_pair(1))
+#                g_screen.addstr(pos[0], pos[1], "%s%s%s" % (showKeyText, g_delimiter , showValueText))
                 
     except Exception, e:
         g_screen.addstr(curses.LINES - 1, 1, repr(e))
@@ -253,6 +256,8 @@ def main():
     handleData.start()
 
     g_screen = curses.initscr()
+    curses.start_color()
+    curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     os.system('clear')
     g_screen.clear()
     g_screen.border(0)

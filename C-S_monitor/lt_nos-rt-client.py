@@ -28,7 +28,8 @@ g_interval = 1
 
 g_hostname = ''
 gNetworkCard = "eth0"
-gDiskName = "vda"
+gDiskName = "sda"
+gwatchPort = []
 
 def getFileContents(name) : 
     try : 
@@ -85,6 +86,23 @@ def diskStatsGenerator(devName):
         time1 = time2
         cells1 = cells2
 
+def tcpStats() : 
+    establisheds = 0
+    timeWait = 0
+    lines = getFileContents('/proc/net/tcp')
+    for line in lines[1:] : 
+        line = line.strip()
+       	cells = line.split()
+        localAddr = cells[1].split(":")
+        port = int(localAddr[1] , 16)
+        status = int(cells[3] , 16)
+        if not gwatchPort or port in gwatchPort : 
+            if status == 1 : 
+			    establisheds += 1
+            elif status == 6 : 
+			    timeWait += 1
+
+    return [establisheds , timeWait]
 
 def cpuRawStats():
     """
@@ -282,6 +300,9 @@ def main():
         netRecvBytes, netSendBytes, netRecvPacks, netSendPacks =  netGen.next()
         print "NET: %d, %d, %d ,%d" % (netRecvBytes, netSendBytes, netRecvPacks, netSendPacks)
 
+        established , timeWait = tcpStats()
+        print "TCP : %d, %d" % (established , timeWait)
+
         statsDict = {'diskUtils' : diskUtils,
                      'diskReadRate' : rps,
                      'diskWriteRate' : wps,
@@ -290,11 +311,11 @@ def main():
                      'netSendBytes' : netSendBytes,
                      'netRecvPacks': netRecvPacks, 
                      'netSendPacks' : netSendPacks,
+					 'established' : established,
+					 'TIME_WAIT' : timeWait
                     }
         
         sendStatsToServer(statsDict)
-
-
 
 if __name__ == '__main__':
     main()
