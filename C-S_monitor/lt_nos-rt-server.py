@@ -45,27 +45,29 @@ g_keyPosDict = {}
 g_requestQueue = Queue.Queue(maxsize = 10000)
 g_screen = None
 
-g_statNames = ['cpuUtils' , 'diskUtils' , 'diskReadRate' , 'diskWriteRate' , 
-				'netRecvBytes' , 'netSendBytes' , 'netRecvPacks' , 'netSendPacks' , 
-				'established' , 'TIME_WAIT']
+g_statNamesAndLimits = [('cpuUtils' , 0.1) , ('diskUtils' , 0.1) , ('diskReadRate' , 1000) , ('diskWriteRate' , 1000) , 
+				('netRecvBytes' , 1) , ('netSendBytes' , 1) , ('netRecvPacks', 1000) , ('netSendPacks' , 1000) , 
+				('established' , 1) , ('TIME_WAIT' , 1)]
 
 def deployShowFrame() : 
     global g_keyPosDict
-    global g_statNames
+    global g_statNamesAndLimits
     global g_machineDict
     global g_delimiter
 
     fullNameLength = maxWidth()
     statValueLength = 6
    	
+    statNames = [pair[0] for pair in g_statNamesAndLimits]
+
     gap = fullNameLength + statValueLength + len(g_delimiter) + 1
     currentLine = 1
     currentPos = 1
     for host in g_machineDict.values() : 
-	    for name in g_statNames : 
+	    for name in statNames : 
 		    fullName = "%s.%s" %(host , name)
 		    g_keyPosDict[fullName] = [currentLine , currentPos , fullNameLength , statValueLength]
-		    g_logFile.write("%s : %s\n" %(fullName , str([currentLine , currentPos , fullNameLength , statValueLength])))
+#		    g_logFile.write("%s : %s\n" %(fullName , str([currentLine , currentPos , fullNameLength , statValueLength])))
 		    currentLine += 1
 		    if currentLine > curses.LINES - 1 : 
 			    print "beyond the max line exit ..."
@@ -75,16 +77,19 @@ def deployShowFrame() :
 	    if currentPos + gap > curses.COLS - 2 : 
 		    currentPos = 1
 	    else : 
-		    currentLine -= len(g_statNames)
+		    currentLine -= len(statNames)
     
 def maxWidth() : 
+    global g_statNamesAndLimits
+
+    statNames = [pair[0] for pair in g_statNamesAndLimits]
     maxHostName = 0
     for host in g_machineDict.values() : 
         if len(host) > maxHostName : 
 		    maxHostName = len(host)
 
     maxStatName = 0
-    for name in g_statNames : 
+    for name in statNames : 
 	    if len(name) > maxStatName : 
 		    maxStatName = len(name)
 	
@@ -102,12 +107,22 @@ def convertNumberwithUnit(value):
     else :
         return "%s" % round(value, 1)
 
+def getLimits(key) : 
+    global g_statNamesAndLimits
+    
+    for item in g_statNamesAndLimits : 
+        if key == item[0] : 
+            return item[1]
+    
+    return None
+
 def showStats(statDict):
     global g_screen
     global g_keyPosDict
     global g_delimiter
+    global g_statNamesAndLimits
 
-    g_logFile.write(str(statDict) + "\n")
+#    g_logFile.write(str(statDict) + "\n")
     #g_screen.addstr(19, 1, repr(statDict))
     try:
         hostname = statDict['hostname']
@@ -121,7 +136,11 @@ def showStats(statDict):
                 pos = g_keyPosDict[posKey]
                 #补空格
                 showKeyText = posKey[:pos[2]].rjust(pos[2])
-
+                color = None
+                limit = getLimits(key)
+                if limit and limit < float(value) : 
+                    color = curses.color_pair(1)
+			    
                 unitValue = convertNumberwithUnit(value)
 
                 #g_screen.addstr(18, 1, str(len(unitValue)))
@@ -130,8 +149,11 @@ def showStats(statDict):
                 if len(unitValue) > pos[3]:
                     unitValue = '*'*pos[3]
                 showValueText  = unitValue.ljust(pos[3])
-                g_screen.addstr(pos[0], pos[1], "%s%s%s" % (showKeyText, g_delimiter , showValueText) , curses.color_pair(1))
-#                g_screen.addstr(pos[0], pos[1], "%s%s%s" % (showKeyText, g_delimiter , showValueText))
+                if color : 
+                    g_screen.addstr(pos[0], pos[1], "%s%s%s" % (showKeyText, g_delimiter , showValueText) , color)
+                else : 
+                    g_screen.addstr(pos[0], pos[1], "%s%s%s" % (showKeyText, g_delimiter , showValueText))
+                g_logFile.write("%s%s%s" % (showKeyText, g_delimiter , showValueText) + "\n")
                 
     except Exception, e:
         g_screen.addstr(curses.LINES - 1, 1, repr(e))
@@ -157,7 +179,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         #　参数True会解析出没有value的key
         argumentList = urlparse.parse_qs(urlparse.urlparse(self.path).query, True)
 
-        g_logFile.write(str(argumentList) + "\n")
+#        g_logFile.write(str(argumentList) + "\n")
         #Logger.debug("self.path\t"+self.path)
         # 匹配资源路径
         resource = urlparse.urlparse(self.path).path
