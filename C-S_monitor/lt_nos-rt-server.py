@@ -71,7 +71,7 @@ def deployShowFrame() :
 		    currentLine += 1
 		    if currentLine > curses.LINES - 1 : 
 			    print "beyond the max line exit ..."
-			    os.exit(-1)
+			    sys.exit(-1)
 	    
 	    currentPos += gap
 	    if currentPos + gap > curses.COLS - 2 : 

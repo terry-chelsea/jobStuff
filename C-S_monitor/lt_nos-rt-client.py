@@ -27,7 +27,7 @@ g_port = 5737
 g_interval = 1
 
 g_hostname = ''
-gNetworkCard = "eth0"
+gNetworkCard = "eth0
 gDiskName = "sda"
 gwatchPort = []
 
